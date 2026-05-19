@@ -701,26 +701,53 @@ function htmlOnce(id,t){
   </div>`;
 }
 
-window.doOnce=(id,p)=>{
-  if(p!==who||who==='admin') return;
-  const cur=tasks[id]?.done?.[p]||false;
-  update(ref(db,`tasks/${id}/done`),{[p]:!cur,
-    ...((!cur)?{[p+'Date']:TODAY}:{[p+'Date']:null})
-  });
-  saveSnapshot();
-};
-  if(!who||who==='admin') return;
-  const cur=tasks[id]?.daily?.[TODAY]?.[who]||0, nv=cur+n;
-  update(ref(db,`tasks/${id}/daily/${TODAY}`),{[who]:nv});
-  const ot=who==='ali'?'fatima':'ali';
-  const ov=tasks[id]?.daily?.[TODAY]?.[ot]||0;
-  const tgt=tasks[id]?.target||1000;
-  if(nv+ov>=tgt&&!tasks[id]?.completedDates?.[TODAY]){
-    update(ref(db,'tasks/'+id),{completedDays:(tasks[id]?.completedDays||0)+1,[`completedDates/${TODAY}`]:true});
+window.doTasbih=(id,n)=>{
+
+  if(!who || who==='admin'){
+    return;
   }
+
+  const cur =
+  tasks[id]?.daily?.[TODAY]?.[who] || 0;
+
+  const nv = cur + n;
+
+  update(
+    ref(db,`tasks/${id}/daily/${TODAY}`),
+    {
+      [who]:nv
+    }
+  );
+
+  const ot =
+  who==='ali'
+  ? 'fatima'
+  : 'ali';
+
+  const ov =
+  tasks[id]?.daily?.[TODAY]?.[ot] || 0;
+
+  const tgt =
+  tasks[id]?.target || 1000;
+
+  if(
+    nv + ov >= tgt &&
+    !tasks[id]?.completedDates?.[TODAY]
+  ){
+
+    update(
+      ref(db,'tasks/'+id),
+      {
+        completedDays:
+        (tasks[id]?.completedDays || 0) + 1,
+
+        [`completedDates/${TODAY}`]:true
+      }
+    );
+  }
+
   saveSnapshot();
 };
-window.doTasbihC=id=>{const n=parseInt(prompt('أدخل العدد:'));if(!isNaN(n)&&n>0)doTasbih(id,n);};
 
 // تصحيح التسبيح — يغير العدد للرقم الصحيح مباشرة
 window.fixTasbih=id=>{
