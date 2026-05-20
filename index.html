@@ -221,7 +221,7 @@ header{text-align:center;padding:1.8rem 1rem .9rem;border-bottom:1px solid var(-
     <input class="pin-field" type="password" id="loginPin" placeholder="كلمة السر" maxlength="10">
     <button class="login-btn" id="loginBtn">دخول</button>
     <div class="login-err" id="loginErr"></div>
-    <div class="login-hint">من القلب الى القلب</div>
+    <div class="login-hint">الكل يدخل بـ 3175</div>
   </div>
 </div>
 
@@ -349,6 +349,58 @@ header{text-align:center;padding:1.8rem 1rem .9rem;border-bottom:1px solid var(-
           <div class="fg"><label class="fl">الوصف</label><input class="fi" id="nOnceDesc" placeholder="مثال: زيارة المسجد النبوي"></div>
         </div>
         <button class="asub" onclick="addTask()">+ إضافة</button>
+      </div>
+
+      <div class="aform" id="colorForm">
+        <h3>🎨 تخصيص الألوان</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+          <div class="fg" style="margin:0">
+            <label class="fl">اللون الرئيسي</label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="color" id="c_teal" value="#3dd6c8" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0;">
+              <span style="font-size:.75rem;color:var(--text3)">فيروزي</span>
+            </div>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">اللون الثانوي</label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="color" id="c_teal2" value="#7eeee6" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0;">
+              <span style="font-size:.75rem;color:var(--text3)">فاتح</span>
+            </div>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">الذهبي</label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="color" id="c_gold" value="#f0c060" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0;">
+              <span style="font-size:.75rem;color:var(--text3)">gold</span>
+            </div>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">الخلفية</label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="color" id="c_bg" value="#060f0f" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0;">
+              <span style="font-size:.75rem;color:var(--text3)">bg</span>
+            </div>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">الأخضر</label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="color" id="c_green" value="#6fcf97" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0;">
+              <span style="font-size:.75rem;color:var(--text3)">green</span>
+            </div>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">النص</label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="color" id="c_text" value="#eef8f8" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0;">
+              <span style="font-size:.75rem;color:var(--text3)">text</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:.8rem;">
+          <button class="asub" onclick="saveColors()" style="flex:2;">💾 حفظ الألوان</button>
+          <button class="asub" onclick="resetColors()" style="flex:1;background:rgba(240,112,112,.1);border-color:var(--red);color:var(--red);">↺ إعادة</button>
+        </div>
       </div>
       <div class="stitle">الأعمال الحالية</div>
       <div id="adminList"></div>
@@ -1023,6 +1075,66 @@ window.saveEdit=id=>{
   update(ref(db,'tasks/'+id),u); editId=null;
 };
 window.delTask=id=>{ if(confirm('حذف هذا العمل؟')) remove(ref(db,'tasks/'+id)); };
+
+// ── COLORS ──
+const DEFAULT_COLORS = {
+  teal:'#3dd6c8', teal2:'#7eeee6', gold:'#f0c060',
+  bg:'#060f0f', green:'#6fcf97', text:'#eef8f8'
+};
+
+function applyColors(c){
+  const r = document.documentElement.style;
+  r.setProperty('--teal',  c.teal  || DEFAULT_COLORS.teal);
+  r.setProperty('--teal2', c.teal2 || DEFAULT_COLORS.teal2);
+  r.setProperty('--gold',  c.gold  || DEFAULT_COLORS.gold);
+  r.setProperty('--bg',    c.bg    || DEFAULT_COLORS.bg);
+  r.setProperty('--bg2',   c.bg    || DEFAULT_COLORS.bg);
+  r.setProperty('--bg3',   c.bg    || DEFAULT_COLORS.bg);
+  r.setProperty('--card',  c.bg    || DEFAULT_COLORS.bg);
+  r.setProperty('--green', c.green || DEFAULT_COLORS.green);
+  r.setProperty('--text',  c.text  || DEFAULT_COLORS.text);
+}
+
+function syncPickersFromDB(c){
+  ['teal','teal2','gold','bg','green','text'].forEach(k=>{
+    const el = document.getElementById('c_'+k);
+    if(el && c[k]) el.value = c[k];
+  });
+}
+
+// Load colors from Firebase on startup
+get(ref(db,'appColors')).then(s=>{
+  const c = s.val();
+  if(c){ applyColors(c); syncPickersFromDB(c); }
+});
+
+// Also listen for live updates (if admin changes while someone is logged in)
+onValue(ref(db,'appColors'), s=>{
+  const c = s.val();
+  if(c){ applyColors(c); syncPickersFromDB(c); }
+});
+
+window.saveColors = ()=>{
+  const c = {
+    teal:  document.getElementById('c_teal').value,
+    teal2: document.getElementById('c_teal2').value,
+    gold:  document.getElementById('c_gold').value,
+    bg:    document.getElementById('c_bg').value,
+    green: document.getElementById('c_green').value,
+    text:  document.getElementById('c_text').value,
+  };
+  set(ref(db,'appColors'), c);
+  applyColors(c);
+  alert('✅ تم حفظ الألوان! كل المستخدمين رح يشوفوا التغيير 🎨');
+};
+
+window.resetColors = ()=>{
+  if(!confirm('إعادة الألوان الافتراضية؟')) return;
+  set(ref(db,'appColors'), DEFAULT_COLORS);
+  applyColors(DEFAULT_COLORS);
+  syncPickersFromDB(DEFAULT_COLORS);
+};
+
 
 // ── NOTIFICATIONS ──
 function getNotifKey(){ return 'notif_' + (who||'unknown'); }
